@@ -66,7 +66,7 @@ export default function Tanggal() {
     const weekDays = getWeekDays(currentDate);
 
     return (
-        <div>
+        <div className='sm:container sm:mx-auto '>
             {/* --- PILL ATAS --- */}
             <div className="flex justify-center p-4">
                 <div className=" mt-6 flex justify-between w-screen">
