@@ -1,6 +1,7 @@
 import React from 'react'
 import Tanggal from './tanggal'
 import JadwalCard from './jadwal'
+import BottomNavbar from './navbar'
 
 export default function Homepage() {
   return (
@@ -8,6 +9,7 @@ export default function Homepage() {
 
     <Tanggal/>
     <JadwalCard/>
+    <BottomNavbar/>
     </div>
   )
 }
