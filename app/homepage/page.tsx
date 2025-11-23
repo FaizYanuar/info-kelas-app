@@ -1,7 +1,7 @@
 import React from 'react'
-import Tanggal from './tanggal'
-import JadwalCard from './jadwal'
-import BottomNavbar from './navbar'
+import Tanggal from '../components/homepage/tanggal'
+import JadwalCard from '../components/homepage/jadwal'
+import BottomNavbar from '../components/homepage/navbar'
 
 export default function Homepage() {
   return (

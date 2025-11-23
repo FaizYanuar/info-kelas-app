@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Homepage from "./components/homepage/home_page";
+import Homepage from "./homepage/page";
 
 export default function Home() {
   return (
