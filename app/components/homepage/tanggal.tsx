@@ -92,7 +92,6 @@ export default function Tanggal() {
                     </div>
                     <button 
                     onClick={handleGoToday}
-                    // Saya menyalin class dari snippet yang Anda kirim
                     className='inline-flex items-center gap-4 py-1 px-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all'
                 >
                     <h1 className='font-medium text-gray-900 text-lg tracking-wide'>TODAY</h1>
