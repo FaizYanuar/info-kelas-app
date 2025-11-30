@@ -1,5 +1,11 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+
+// --- 1. DEFINISI PROPS (Agar bisa komunikasi dengan Homepage) ---
+interface TanggalProps {
+    selectedDate: Date;
+    onDateChange: (date: Date) => void;
+}
 
 // Helper: Format tanggal pill atas (e.g., "16 NOV, SUN")
 const formatDisplayDate = (date: Date) => {
@@ -25,52 +31,56 @@ const getWeekDays = (baseDate: Date) => {
     return days;
 };
 
-// Helper: Cek jika 2 tanggal adalah hari yang sama
-const isSameDay = (d1: Date, d2: Date) => {
-    return d1.toDateString() === d2.toDateString();
-};
+// --- KOMPONEN UTAMA ---
+// Menerima props 'selectedDate' dan 'onDateChange' dari Homepage
+export default function Tanggal({ selectedDate, onDateChange }: TanggalProps) {
 
+    // Kita gunakan state lokal ini agar slider terasa responsif
+    // Slider selalu dimulai dari tanggal yang dipilih (agar selected date selalu di kiri/index 0)
+    const [sliderStartDate, setSliderStartDate] = useState(selectedDate);
 
-export default function Tanggal() {
-
-    // State utama untuk tanggal yang sedang aktif
-    const [currentDate, setCurrentDate] = useState(new Date());
+    // Sinkronisasi: Jika Parent mengubah tanggal, update slider lokal kita
+    useEffect(() => {
+        setSliderStartDate(selectedDate);
+    }, [selectedDate]);
 
     // Handler: Mundur 1 hari
     const handlePrevDay = () => {
-        setCurrentDate(prevDate => {
-            const prev = new Date(prevDate);
-            prev.setDate(prev.getDate() - 1);
-            return prev;
-        });
+        const prev = new Date(selectedDate);
+        prev.setDate(selectedDate.getDate() - 1);
+        
+        onDateChange(prev); // Lapor ke Homepage
+        setSliderStartDate(prev); // Geser slider
     };
 
     // Handler: Maju 1 hari
     const handleNextDay = () => {
-        setCurrentDate(prevDate => {
-            const next = new Date(prevDate);
-            next.setDate(next.getDate() + 1);
-            return next;
-        });
+        const next = new Date(selectedDate);
+        next.setDate(selectedDate.getDate() + 1);
+        
+        onDateChange(next); // Lapor ke Homepage
+        setSliderStartDate(next); // Geser slider
     };
 
+    // Handler: Kembali ke Hari Ini
     const handleGoToday = () => {
-        setCurrentDate(new Date());
+        const today = new Date();
+        onDateChange(today);    // Lapor ke Homepage
+        setSliderStartDate(today); // Geser slider
     };
 
-    // Format tanggal untuk pill atas (berdasarkan state)
-    const formattedDate = formatDisplayDate(currentDate);
+    // Format tampilan tanggal berdasarkan apa yang dipilih di Homepage
+    const formattedDate = formatDisplayDate(selectedDate);
 
-    // Hitung ulang 7 hari (berdasarkan state)
-    // Ini membuat slider "bergeser"
-    const weekDays = getWeekDays(currentDate);
+    // Generate list kartu berdasarkan sliderStartDate
+    const weekDays = getWeekDays(sliderStartDate);
 
     return (
         <div className='sm:container sm:mx-auto '>
             {/* --- PILL ATAS --- */}
             <div className="flex justify-center p-4">
-                <div className=" mt-6 flex justify-between w-screen">
-                    <div className='inline-flex items-center gap-2 py-1 px-4 bg-white rounded-xl shadow-sm  border border-gray-200'>
+                 <div className=" mt-6 flex justify-between w-screen">
+                    <div className='inline-flex items-center gap-2 py-1 px-4 bg-white rounded-xl shadow-sm border border-gray-200'>
                         {/* Tombol "Prev" */}
                         <button onClick={handlePrevDay} className="p-1 rounded-full hover:bg-gray-100 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" width="17" height="34" viewBox="0 0 12 24">
@@ -82,7 +92,7 @@ export default function Tanggal() {
 
                         {/* Teks tanggal dinamis */}
                         <span className="font-medium text-gray-900 text-xl tracking-wide w-36 text-center">
-                            {formattedDate}
+                            {formattedDate} 
                         </span>
 
                         {/* Tombol "Next" */}
@@ -90,14 +100,15 @@ export default function Tanggal() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="17" height="34" viewBox="0 0 12 24"><path fill="currentColor" fillRule="evenodd" d="M10.157 12.711L4.5 18.368l-1.414-1.414l4.95-4.95l-4.95-4.95L4.5 5.64l5.657 5.657a1 1 0 0 1 0 1.414" /></svg>
                         </button>
                     </div>
+                    
+                    {/* Tombol Today */}
                     <button 
-                    onClick={handleGoToday}
-                    className='inline-flex items-center gap-4 py-1 px-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all'
-                >
-                    <h1 className='font-medium text-gray-900 text-lg tracking-wide'>TODAY</h1>
-                </button>
+                        onClick={handleGoToday}
+                        className='inline-flex items-center gap-4 py-1 px-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all'
+                    >
+                        <h1 className='font-medium text-gray-900 text-lg tracking-wide'>TODAY</h1>
+                    </button>
                 </div>
-
             </div>
 
             {/* --- SLIDER KARTU BAWAH --- */}
@@ -107,28 +118,31 @@ export default function Tanggal() {
                     <div className='flex gap-3 overflow-x-auto pb-1 no-scrollbar'>
 
                         {/* Loop untuk 7 kartu hari */}
-                        {weekDays.map((day, index) => (
-                            <button
-                                key={day.key}
-                                // Update state saat kartu diklik
-                                onClick={() => setCurrentDate(day.fullDate)}
+                        {weekDays.map((day) => {
+                            // Cek apakah ini hari yang dipilih (untuk pewarnaan)
+                            const isSelected = day.fullDate.toDateString() === selectedDate.toDateString();
 
-                                // Ganti style: Kartu pertama (index 0) selalu aktif
-                                className={`
-                                    shrink-0 
-                                    w-16 
-                                    py-2 px-2 text-center rounded-lg shadow-sm 
-                                    transition-colors duration-200
-                                    ${index === 0
+                            return (
+                                <button
+                                    key={day.key}
+                                    // Update Parent saat kartu diklik
+                                    onClick={() => {
+                                        onDateChange(day.fullDate);
+                                        setSliderStartDate(day.fullDate); // Agar slider tetap diam di posisi tanggal terpilih (index 0)
+                                    }}
+
+                                    className={`shrink-0 w-16 py-2 px-2 text-center rounded-lg shadow-sm transition-colors duration-200
+                                    ${isSelected
                                         ? 'bg-[#D06E49] text-white' // Aktif
                                         : 'bg-white/10 text-[#CFCFCF] hover:bg-white/20' // Inaktif
                                     }
-                                `}
-                            >
-                                <h1 className='text-lg font-medium'>{day.day}</h1>
-                                <h1 className='text-3xl font-bold'>{day.date}</h1>
-                            </button>
-                        ))}
+                                    `}
+                                >
+                                    <h1 className='text-lg font-medium'>{day.day}</h1>
+                                    <h1 className='text-3xl font-bold'>{day.date}</h1>
+                                </button>
+                            )
+                        })}
                     </div>
                 </div>
             </div>
