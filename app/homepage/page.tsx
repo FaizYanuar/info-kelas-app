@@ -1,101 +1,137 @@
 "use client"
 import React, { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase' // Pastikan path ini benar sesuai struktur folder Anda
+import { supabase } from '@/lib/supabase'
 import Tanggal from '../components/homepage/tanggal'
 import JadwalCard from '../components/homepage/jadwal'
 import BottomNavbar from '../components/homepage/navbar'
+import AddScheduleModal from '../components/homepage/schedulemodal'
 
 export default function Homepage() {
-  
-  // 1. STATE: Menyimpan tanggal yang dipilih (Default: Hari ini)
   const [selectedDate, setSelectedDate] = useState(new Date());
-
-  // 2. STATE: Menyimpan data jadwal dari database
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // State untuk Modal Tambah
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // 3. FUNGSI: Mengambil data dari Supabase
   const fetchSchedules = async (date: Date) => {
     setLoading(true);
-
-    // Ambil hari dalam angka (0=Minggu, 1=Senin, dst)
     const dayOfWeek = date.getDay();
-
-    // Format tanggal ke YYYY-MM-DD untuk mencocokkan dengan tabel logs
-    // 'en-CA' adalah trik cepat untuk dapat format YYYY-MM-DD lokal
     const dateString = date.toLocaleDateString('en-CA'); 
 
-    // Query ke Supabase
-    const { data, error } = await supabase
+    // 1. Ambil Jadwal Rutin
+    const regularQuery = supabase
       .from('weekly_schedules')
       .select(`
-        id,
-        room,
-        time_text,
-        sort_index,
-        subjects (
-          name,
-          lecturers ( name )
-        ),
-        session_logs (
-          status,
-          note
-        )
+        id, room, time_text, sort_index,
+        subjects ( name, lecturers ( name ) ),
+        session_logs ( id, status, note )
       `)
-      .eq('day_of_week', dayOfWeek) // Filter sesuai hari (Senin/Selasa/dst)
-      .eq('session_logs.date', dateString) // Filter log KHUSUS tanggal ini
-      .order('sort_index', { ascending: true }); // Urutkan berdasarkan jam mulai
+      .eq('day_of_week', dayOfWeek)
+      .eq('session_logs.date', dateString);
 
-    if (error) {
-      console.error('Error fetching schedules:', error);
+    // 2. Ambil Jadwal Tambahan (Sekarang ambil status & note juga)
+    const additionalQuery = supabase
+      .from('additional_schedules')
+      .select(`
+        id, room, time_text, sort_index, status, note,
+        subjects ( name, lecturers ( name ) )
+      `)
+      .eq('date', dateString);
+
+    const [regularRes, additionalRes] = await Promise.all([regularQuery, additionalQuery]);
+
+    if (regularRes.error || additionalRes.error) {
+        console.error('Error fetching data');
     } else {
-      setSchedules(data || []);
+        // --- PROSES DATA REGULAR ---
+        const regularData = (regularRes.data || []).map(item => ({
+            ...item,
+            is_additional: false // Tandai sebagai jadwal rutin
+        }));
+
+        // --- PROSES DATA TAMBAHAN (TRIK NORMALISASI) ---
+        // Kita ubah formatnya agar punya 'session_logs' palsu
+        // supaya JadwalCard bisa membacanya tanpa error.
+        const additionalData = (additionalRes.data || []).map(item => ({
+            id: item.id,
+            room: item.room,
+            time_text: item.time_text,
+            sort_index: item.sort_index,
+            subjects: item.subjects,
+            is_additional: true, // Tandai sebagai jadwal tambahan
+            
+            // Trik: Masukkan status/note item ini ke dalam array session_logs palsu
+            session_logs: [{
+                status: item.status || 'present_offline',
+                note: item.note
+            }]
+        }));
+
+        const combined = [...regularData, ...additionalData];
+        combined.sort((a, b) => a.sort_index - b.sort_index);
+
+        setSchedules(combined);
     }
-    
     setLoading(false);
   };
 
-  // 4. EFFECT: Jalankan fetch setiap kali 'selectedDate' berubah
   useEffect(() => {
     fetchSchedules(selectedDate);
   }, [selectedDate]);
 
+  // Tombol Tambah (Reusable Component)
+  const TombolTambah = () => (
+    <button 
+      onClick={() => setIsAddModalOpen(true)} // Buka Modal saat diklik
+      className='w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-medium hover:border-[#D06E49] hover:text-[#D06E49] hover:bg-orange-50 transition-all flex justify-center items-center gap-2 group'
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" className="text-gray-400 group-hover:text-[#D06E49] transition-colors"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z"/></svg>
+      Tambah Jadwal Pengganti
+    </button>
+  );
+
   return (
     <div className='bg-[#EDEBE8] h-screen overflow-auto'>
+      <Tanggal selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
-      {/* Kirim State ke komponen Tanggal:
-        1. selectedDate: Agar Tanggal tahu hari apa yang harus di-highlight (oranye)
-        2. onDateChange: Agar Tanggal bisa mengubah state di sini saat tombol diklik
-      */}
-      <Tanggal 
-        selectedDate={selectedDate} 
-        onDateChange={setSelectedDate} 
-      />
-
-      <div className='pb-24 px-2 mt-4'> {/* Tambah px-2 dan mt-4 agar rapi */}
-        
-        {/* LOGIKA RENDERING JADWAL */}
+      <div className='pb-24 sm:px-4 sm:container sm:mx-auto sm:max-w-1/3'>
         {loading ? (
-          // Tampilan Loading
-          <div className='text-center text-gray-400 py-10 animate-pulse'>
-            Memuat jadwal...
-          </div>
+          <div className='text-center text-gray-400 py-10 animate-pulse'>Memuat jadwal...</div>
         ) : schedules.length === 0 ? (
-          // Tampilan Jika Kosong (Hari Libur/Minggu)
-          <div className='flex flex-col items-center justify-center py-10 text-gray-400 opacity-70'>
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4l8-8z"/></svg>
-            <p className='mt-2 font-medium'>Tidak ada jadwal kuliah.</p>
+          <div className='flex flex-col items-center justify-center py-1'>
+            <div className="w-full mb-10 px-4">
+               <TombolTambah />
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 14 14"><g fill="none" stroke="#ABAEB5" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.7"><path d="M7 13.5a6.5 6.5 0 1 0 0-13a6.5 6.5 0 0 0 0 13"/><path d="M8.367 5.69c.157-.255.5-.418.834-.418s.678.163.835.417m-4.403.001c-.157-.255-.5-.418-.834-.418s-.678.163-.835.417m.216 2.945a1.41 1.41 0 1 0 2.819 0a1.41 1.41 0 0 0 2.82 0"/></g></svg>
+            <h2 className='text-xl font-bold text-gray-600'>Horee! 🎉</h2>
+            <p className='text-sm mt-1 text-gray-500'>Hari ini tidak ada mata kuliah.</p>
           </div>
         ) : (
-          // Tampilan Data (Looping Kartu)
-          schedules.map((item) => (
-            <JadwalCard key={item.id} data={item} />
-          ))
+          <>
+            {schedules.map((item) => (
+              <JadwalCard 
+                key={item.id} 
+                data={item} 
+                selectedDate={selectedDate}
+                onUpdate={() => fetchSchedules(selectedDate)}
+              />
+            ))}
+            <TombolTambah />
+          </>
         )}
-
       </div>
       
       <BottomNavbar />
+
+      {/* Render Modal di sini */}
+      <AddScheduleModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)}
+        selectedDate={selectedDate}
+        onSuccess={() => fetchSchedules(selectedDate)} // Refresh data setelah tambah
+      />
+
     </div>
   )
 }
