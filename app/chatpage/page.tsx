@@ -1,40 +1,84 @@
 "use client"
 import React, { useState, useRef, useEffect } from 'react'
-import BottomNavbar from '../components/homepage/navbar' // Sesuaikan path
+import BottomNavbar from '../components/homepage/navbar'
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<{ role: 'user' | 'bot', text: string }[]>([
-    { role: 'bot', text: 'Halo! Ada yang bisa aku bantu soal jadwal atau tugas?' }
-  ]);
+  const defaultMessage = { role: 'bot', text: 'Halo! Ada yang bisa aku bantu soal jadwal atau tugas?' };
+  
+  const [messages, setMessages] = useState<any[]>([defaultMessage]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // STATE BARU: Penanda apakah data lama sudah dimuat?
+  const [isLoaded, setIsLoaded] = useState(false);
+  
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto scroll ke bawah
+  // --- 1. LOAD HISTORY (Hanya sekali saat pertama buka) ---
+  useEffect(() => {
+    // Cek apakah ada data di browser?
+    const savedChats = localStorage.getItem('chat_history');
+    
+    if (savedChats) {
+      try {
+        const parsed = JSON.parse(savedChats);
+        // Hanya set jika datanya valid array
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      } catch (e) {
+        console.error("Gagal baca history", e);
+      }
+    }
+    
+    // PENTING: Tandai bahwa loading selesai!
+    setIsLoaded(true);
+  }, []);
+
+  // --- 2. SAVE HISTORY (Setiap ada pesan baru) ---
+  useEffect(() => {
+    // PENTING: Jangan simpan jika belum selesai loading (mencegah overwrite)
+    if (!isLoaded) return;
+
+    localStorage.setItem('chat_history', JSON.stringify(messages));
+  }, [messages, isLoaded]); // Jalankan efek ini jika messages atau isLoaded berubah
+
+  // Auto scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleClearChat = () => {
+    if (confirm("Hapus semua riwayat chat?")) {
+      setMessages([defaultMessage]);
+      localStorage.removeItem('chat_history');
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    // 1. Tampilkan pesan user
     const userMessage = input;
+    
+    // Simpan riwayat SEBELUM ditambah pesan baru ini
+    const currentHistory = messages; 
+
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setInput('');
     setIsLoading(true);
 
     try {
-      // 2. Kirim ke API Route yang kita buat tadi
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage })
+        body: JSON.stringify({ 
+            message: userMessage, // Pesan baru
+            history: currentHistory // <-- OBAT ALZHEIMER: Kirim riwayat masa lalu
+        })
       });
       
       const data = await res.json();
 
-      // 3. Tampilkan balasan AI
       setMessages(prev => [...prev, { role: 'bot', text: data.reply || "Maaf, error." }]);
     } catch (err) {
       setMessages(prev => [...prev, { role: 'bot', text: "Gagal terhubung ke server." }]);
@@ -47,9 +91,19 @@ export default function ChatPage() {
     <div className='bg-[#EDEBE8] h-screen flex flex-col'>
       
       {/* Header */}
-      <div className='bg-[#2051A2] p-4 pt-8 shadow-md shrink-0'>
-        <h1 className='text-white font-bold text-xl'>Asisten Kelas 🤖</h1>
-        <p className='text-blue-200 text-xs'>Tanya apa saja tentang jadwal & tugas</p>
+      <div className='bg-[#2051A2] p-4 pt-8 shadow-md shrink-0 flex justify-between items-center'>
+        <div>
+            <h1 className='text-white font-bold text-xl'>Asisten Kelas 🤖</h1>
+            <p className='text-blue-200 text-xs'>Tanya apa saja tentang jadwal & tugas</p>
+        </div>
+        
+        <button 
+            onClick={handleClearChat}
+            className='p-2 bg-white/10 rounded-full text-white hover:bg-red-500 hover:text-white transition-colors'
+            title="Hapus Riwayat Chat"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
       </div>
 
       {/* Chat Area */}
@@ -63,8 +117,7 @@ export default function ChatPage() {
                   : 'bg-white text-gray-800 rounded-tl-none border border-gray-200'}
               `}
             >
-              {/* Render baris baru jika ada */}
-              {msg.text.split('\n').map((line, i) => (
+              {typeof msg.text === 'string' && msg.text.split('\n').map((line: string, i: number) => (
                 <p key={i} className="min-h-4">{line}</p>
               ))}
             </div>
