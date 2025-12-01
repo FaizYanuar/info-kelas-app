@@ -93,7 +93,7 @@ export default function ChatPage() {
       {/* Header */}
       <div className='bg-[#2051A2] p-4 pt-8 shadow-md shrink-0 flex justify-between items-center'>
         <div>
-            <h1 className='text-white font-bold text-xl'>Asisten Kelas 🤖</h1>
+            <h1 className='text-white font-bold text-xl'>Asisten Kelas</h1>
             <p className='text-blue-200 text-xs'>Tanya apa saja tentang jadwal & tugas</p>
         </div>
         
@@ -137,7 +137,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input Area */}
-      <div className='fixed bottom-20 left-0 w-full px-4'>
+      <div className='fixed bottom-22 left-0 w-full px-4'>
         <div className='bg-white p-2 rounded-full shadow-lg border border-gray-200 flex items-center gap-2'>
           <input 
             type="text" 
