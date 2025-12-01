@@ -22,11 +22,11 @@ export default function JadwalCard({ data, selectedDate, onUpdate }: JadwalProps
     // Logika Status Badge (Sama seperti sebelumnya)
     let statusBadge;
     let containerBorder = 'border-gray-200';
-    let statusIndicatorColor = 'bg-green-600';
+    let statusIndicatorColor = 'bg-[#2BCB1F]';
 
     if (log?.status === 'absent') {
         statusBadge = <h1 className='bg-red-200 text-red-800 text-xs mt-1 px-2 py-1 w-fit rounded-xl font-bold'>TIDAK HADIR</h1>;
-        containerBorder = 'border-red-200 bg-red-50';
+        containerBorder = 'border-red-200 bg-[#CB1F1F]';
         statusIndicatorColor = 'bg-red-600';
     } else if (log?.status === 'present_online') {
         statusBadge = <h1 className='bg-blue-200 text-blue-800 text-xs mt-1 px-2 py-1 w-fit rounded-xl font-bold'>ONLINE</h1>;
@@ -42,13 +42,13 @@ export default function JadwalCard({ data, selectedDate, onUpdate }: JadwalProps
                     <div className={`items-center w-full gap-2 py-1 px-4 bg-white rounded-xl shadow-md border ${containerBorder}`}>
                         
                         {/* Header */}
-                        <div className='flex justify-between items-center w-full border-b py-2 border-[#D9D9D9]'>
-                            <div className='flex-1 pr-2'>
+                        <div className='flex justify-between items-center w-full border-b py-2 border-[#D9D9D9] gap-3'>
+                            <div className='flex-1 min-w-0'>
                                 <h1 className='font-medium truncate'>{data.subjects.name}</h1>
                                 <h1 className='uppercase font-medium text-[#834646] text-sm'>{data.subjects.lecturers.name}</h1>
                                 {statusBadge}
                             </div>
-                            <div className={`${statusIndicatorColor} w-[35px] h-[35px] rounded-full shadow-inner`}></div>
+                            <div className={`${statusIndicatorColor} w-[35px] h-[35px] rounded-full shadow-inner shrink-0`}></div>
                         </div>
 
                         {/* Body */}
