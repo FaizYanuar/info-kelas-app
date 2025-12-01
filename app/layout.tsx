@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,9 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Info Kelas 3KA33",
-  description: "Info Kelas 3KA33",
+  title: "Info Kelas",
+  description: "Aplikasi Jadwal",
+  manifest: "/manifest.json", // <--- PENTING: Menghubungkan manifest
+  icons: '/icon-512x512.png',
 };
+
+export const viewport: Viewport = {
+  themeColor: "#2051A2", // Warna bar status di HP Android
+};
+
+
 
 export default function RootLayout({
   children,
