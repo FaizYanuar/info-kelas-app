@@ -37,7 +37,7 @@ export default function JadwalCard({ data, selectedDate, onUpdate }: JadwalProps
 
     return (
         <>
-            <div className='sm:container sm:mx-auto sm:max-w-1/3 mb-4'>
+            <div className='sm:container sm:mx-auto mb-4'>
                 <div className='flex justify-center px-4'>
                     <div className={`items-center w-full gap-2 py-1 px-4 bg-white rounded-xl shadow-md border ${containerBorder}`}>
                         
