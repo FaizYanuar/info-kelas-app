@@ -102,7 +102,7 @@ export default function Homepage() {
     <div className='bg-[#EDEBE8] h-screen overflow-auto'>
       <Tanggal selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
-      <div className='pb-24 sm:px-4 sm:container sm:mx-auto sm:max-w-1/3'>
+      <div className='pb-24 sm:px-4 sm:container sm:mx-auto sm:max-w-1/3 px-4'>
         {loading ? (
           <div className='text-center text-gray-400 py-10 animate-pulse'>Memuat jadwal...</div>
         ) : schedules.length === 0 ? (

@@ -91,10 +91,10 @@ export default function ChatPage() {
     <div className='bg-[#EDEBE8] h-screen flex flex-col'>
       
       {/* Header */}
-      <div className='bg-[#2051A2] p-4 pt-8 shadow-md shrink-0 flex justify-between items-center'>
+      <div className='bg-[#2051A2] px-6 pt-4 pb-4 rounded-b-3xl shadow-md shrink-0 flex justify-between items-center'>
         <div>
-            <h1 className='text-white font-bold text-xl'>Asisten Kelas</h1>
-            <p className='text-blue-200 text-xs'>Tanya apa saja tentang jadwal & tugas</p>
+            <h1 className='text-white text-2xl font-bold'>Asisten Kelas</h1>
+            <p className='text-blue-100 text-sm'>Tanya apapun tentang jadwal, tugas, & lainnya!</p>
         </div>
         
         <button 

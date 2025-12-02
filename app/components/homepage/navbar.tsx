@@ -12,7 +12,7 @@ export default function BottomNavbar() {
     const inactiveColor = "#fff";   // Putih
 
     return (
-        <div className='fixed bottom-0 left-0 w-full z-50 bg-[#2B4570] py-4 rounded-t-2xl'>
+        <div className='fixed bottom-0 left-0 w-full z-50 bg-[#2051A2] py-4 rounded-t-2xl'>
             <div className='flex justify-center gap-14'>
                 
                 {/* --- 1. HOME ICON --- */}

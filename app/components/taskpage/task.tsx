@@ -78,7 +78,7 @@ export default function TaskPage() {
         <div className='bg-[#EDEBE8] min-h-screen pb-24'>
             
             {/* Header */}
-            <div className='bg-[#2051A2] pt-8 pb-12 px-6 rounded-b-3xl shadow-lg mb-6'>
+            <div className='bg-[#2051A2] pt-4 pb-4 px-6 rounded-b-3xl shadow-lg mb-6'>
                 <h1 className='text-white text-2xl font-bold'>Daftar Tugas</h1>
                 <p className='text-blue-100 text-sm'>Selesaikan sebelum deadline!</p>
             </div>
@@ -108,6 +108,7 @@ export default function TaskPage() {
                         <TombolTambah />
                     </>
                 )}
+                
             </div>
 
             {/* --- MODAL DETAILS --- */}
@@ -123,7 +124,7 @@ export default function TaskPage() {
                 onClose={() => setIsAddModalOpen(false)}
                 onSuccess={fetchTasks} // Refresh data setelah tambah sukses
             />
-
+            
         </div>
     )
 }
