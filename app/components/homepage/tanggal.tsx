@@ -34,6 +34,7 @@ const getWeekDays = (baseDate: Date) => {
 // --- KOMPONEN UTAMA ---
 // Menerima props 'selectedDate' dan 'onDateChange' dari Homepage
 export default function Tanggal({ selectedDate, onDateChange }: TanggalProps) {
+    
 
     // Kita gunakan state lokal ini agar slider terasa responsif
     // Slider selalu dimulai dari tanggal yang dipilih (agar selected date selalu di kiri/index 0)
@@ -82,6 +83,7 @@ export default function Tanggal({ selectedDate, onDateChange }: TanggalProps) {
                     <h1 className='text-white text-2xl font-bold'>Jadwal Kelas</h1>
                     <p className='text-blue-100 text-sm'>Ada jadwal apa hari ini ya?</p>
                 </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 20 20"><path fill="#fff" fillRule="evenodd" d="M3 5a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1m0 5a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1m6 5a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2h-6a1 1 0 0 1-1-1" clipRule="evenodd" /></svg>
             </div>
             {/* --- PILL ATAS --- */}
             <div className="flex justify-center px-4">

@@ -1,6 +1,7 @@
 "use client"
-import React from 'react'
+import { useEffect, useState } from 'react'
 import { Task, Attachment } from './types' // <--- IMPORT DARI TYPES
+import { supabase } from '@/lib/supabase'
 
 interface ModalProps {
     isOpen: boolean;
@@ -25,6 +26,21 @@ const getFileDetails = (fileName: string) => {
 
 export default function TaskDetailModal({ isOpen, onClose, task }: ModalProps) {
     if (!isOpen || !task) return null;
+
+     const [isAdmin, setIsAdmin] = useState(false);
+    
+      useEffect(() => {
+        checkUser();
+      }, []);
+    
+      const checkUser = async () => {
+        // Pastikan supabase sudah diimport di atas
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setIsAdmin(true);
+        }
+      };
+    
 
     return (
         <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -116,7 +132,9 @@ export default function TaskDetailModal({ isOpen, onClose, task }: ModalProps) {
                 {/* Footer Buttons */}
                 <div className="p-4 border-t border-gray-100 flex gap-3 shrink-0 bg-white">
                     <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-gray-600 font-medium hover:bg-gray-100 transition-colors border border-gray-200">Tutup</button>
+                    {isAdmin && (
                     <button onClick={() => alert("Sudah dikumpulkan!")} className="flex-1 py-2.5 rounded-xl bg-[#D06E49] text-white font-medium hover:bg-[#b55c3b] transition-colors shadow-lg shadow-orange-200">Tandai Selesai</button>
+                    )}
                 </div>
             </div>
         </div>

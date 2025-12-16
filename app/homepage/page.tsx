@@ -11,6 +11,20 @@ export default function Homepage() {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    // Pastikan supabase sudah diimport di atas
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setIsAdmin(true);
+    }
+  };
+
   // State untuk Modal Tambah
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -124,7 +138,9 @@ export default function Homepage() {
                 onUpdate={() => fetchSchedules(selectedDate)}
               />
             ))}
-            <TombolTambah />
+            {isAdmin && (
+              <TombolTambah />
+            )}
           </>
         )}
       </div>

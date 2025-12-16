@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import TaskDetailModal from '../../components/taskpage/TaskDetailModal';
-import AddTaskModal from '../../components/taskpage/AddTaskModal'; 
+import AddTaskModal from '../../components/taskpage/AddTaskModal';
 import { Task } from '../../components/taskpage/types';
 import TugasCard from './tugascard';
 
@@ -16,7 +16,20 @@ const formatDeadline = (isoString: string) => {
 export default function TaskPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
-    
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        fetchTasks();
+        checkUser(); // Cek user saat load
+    }, []);
+
+    const checkUser = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            setIsAdmin(true);
+        }
+    };
+
     // State Modal
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false); // <--- STATE MODAL TAMBAH
@@ -43,7 +56,7 @@ export default function TaskPage() {
                     lecturer: item.subjects.lecturers.name,
                     title: item.title,
                     description: item.description,
-                    deadlineDate: datePart, 
+                    deadlineDate: datePart,
                     deadlineTime: timePart,
                     submissionLink: item.submission_link,
                     attachments: item.attachments,
@@ -63,20 +76,22 @@ export default function TaskPage() {
     const TombolTambah = () => (
         <div className='sm:container sm:mx-auto sm:max-w-1/3 mb-4'>
             <div className='flex justify-center px-4'>
-                <button 
+                <button
                     onClick={() => setIsAddModalOpen(true)}
                     className='w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-medium hover:border-[#D06E49] hover:text-[#D06E49] hover:bg-orange-50 transition-all flex justify-center items-center gap-2 group'
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" className="text-gray-400 group-hover:text-[#D06E49] transition-colors"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" className="text-gray-400 group-hover:text-[#D06E49] transition-colors"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z" /></svg>
                     Tambah Tugas Baru
                 </button>
             </div>
         </div>
     );
 
+
+
     return (
         <div className='bg-[#EDEBE8] min-h-screen pb-24'>
-            
+
             {/* Header */}
             <div className='bg-[#2051A2] pt-4 pb-4 px-6 rounded-b-3xl shadow-lg mb-6'>
                 <h1 className='text-white text-2xl font-bold'>Daftar Tugas</h1>
@@ -98,25 +113,29 @@ export default function TaskPage() {
                 ) : (
                     <>
                         {tasks.map((task) => (
-                            <TugasCard 
-                                key={task.id} 
-                                data={task} 
-                                onDetailClick={() => setSelectedTask(task)} 
+                            <TugasCard
+                                key={task.id}
+                                data={task}
+                                onDetailClick={() => setSelectedTask(task)}
                             />
                         ))}
                         {/* Tombol di bawah jika ada data */}
-                        <TombolTambah />
+                        {isAdmin && (
+                            <TombolTambah />
+                        )}
                     </>
                 )}
-                
+
             </div>
 
             {/* --- MODAL DETAILS --- */}
-            <TaskDetailModal 
-                isOpen={!!selectedTask}
-                onClose={() => setSelectedTask(null)}
-                task={selectedTask}
-            />
+            {selectedTask && (
+                <TaskDetailModal
+                    isOpen={true}
+                    onClose={() => setSelectedTask(null)}
+                    task={selectedTask}
+                />
+            )}
 
             {/* --- MODAL TAMBAH (BARU) --- */}
             <AddTaskModal
@@ -124,7 +143,7 @@ export default function TaskPage() {
                 onClose={() => setIsAddModalOpen(false)}
                 onSuccess={fetchTasks} // Refresh data setelah tambah sukses
             />
-            
+
         </div>
     )
 }

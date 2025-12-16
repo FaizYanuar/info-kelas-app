@@ -1,11 +1,13 @@
 "use client"
-import React, { useState } from 'react'
-import EditScheduleModal from './EditScheduleModal' // Import Modal Baru
+import React, { useState, useEffect } from 'react'
+import EditScheduleModal from './EditScheduleModal'
+// PENTING: Import supabase client Anda di sini
+import { supabase } from '@/lib/supabase' 
 
 interface JadwalProps {
     selectedDate: Date;
     onUpdate: () => void;
-    data: any; // Bisa disederhanakan jadi any atau definisikan tipe lengkap
+    data: any;
 }
 
 export default function JadwalCard({ data, selectedDate, onUpdate }: JadwalProps) {
@@ -13,13 +15,26 @@ export default function JadwalCard({ data, selectedDate, onUpdate }: JadwalProps
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const log = data.session_logs?.[0];
-    
+
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        checkUser(); 
+    }, []);
+
+    const checkUser = async () => {
+        // Pastikan supabase sudah diimport di atas
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            setIsAdmin(true);
+        }
+    };
+
     // --- LOGIKA TAMPILAN DINAMIS ---
-    // Jika ada override di log, pakai itu. Jika tidak, pakai data asli jadwal.
     const displayRoom = log?.room_override || data.room;
     const displayTime = log?.time_text_override || data.time_text;
 
-    // Logika Status Badge (Sama seperti sebelumnya)
+    // Logika Status Badge
     let statusBadge;
     let containerBorder = 'border-gray-200';
     let statusIndicatorColor = 'bg-[#2BCB1F]';
@@ -40,7 +55,7 @@ export default function JadwalCard({ data, selectedDate, onUpdate }: JadwalProps
             <div className='sm:container sm:mx-auto mb-4'>
                 <div className='flex justify-center'>
                     <div className={`items-center w-full gap-2 py-1 px-4 bg-white rounded-xl shadow-md border ${containerBorder}`}>
-                        
+
                         {/* Header */}
                         <div className='flex justify-between items-center w-full border-b py-2 border-[#D9D9D9] gap-3'>
                             <div className='flex-1 min-w-0'>
@@ -55,7 +70,6 @@ export default function JadwalCard({ data, selectedDate, onUpdate }: JadwalProps
                         <div className={`${isExpanded ? 'flex flex-col py-2' : 'flex justify-between items-center'}`}>
                             {!isExpanded ? (
                                 <div className='flex'>
-                                    {/* Gunakan variabel displayRoom/displayTime agar terupdate */}
                                     <h1 className='text-xl font-medium py-2 pr-5 border-r border-gray-200 w-fit'>{displayRoom}</h1>
                                     <h1 className='text-xl font-medium py-2 pl-5'>{displayTime}</h1>
                                 </div>
@@ -79,18 +93,20 @@ export default function JadwalCard({ data, selectedDate, onUpdate }: JadwalProps
                                     </div>
                                 </div>
                             )}
-                            
+
                             {/* Buttons */}
                             <div className={`flex gap-2 transition-all ${isExpanded ? 'ml-auto mt-4' : ''}`}>
-                                {isExpanded && (
-                                    <button 
+                                {/* PERBAIKAN SYNTAX DI SINI */}
+                                {isExpanded && isAdmin && (
+                                    <button
                                         onClick={() => setIsModalOpen(true)}
                                         className='font-medium text-[10px] bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-xl py-1.5 px-3 transition-all'
                                     >
                                         Edit
                                     </button>
                                 )}
-                                <button 
+                                
+                                <button
                                     onClick={() => setIsExpanded(!isExpanded)}
                                     className='font-medium text-[10px] bg-[#D06E49] rounded-xl py-1.5 px-3 text-white transition-all'
                                 >
@@ -102,8 +118,7 @@ export default function JadwalCard({ data, selectedDate, onUpdate }: JadwalProps
                 </div>
             </div>
 
-            {/* Panggil Komponen Modal Terpisah */}
-            <EditScheduleModal 
+            <EditScheduleModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={onUpdate}
