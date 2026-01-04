@@ -36,8 +36,12 @@ export default function ArchivePage() {
         *, 
         subjects ( name, lecturers ( name ) )
       `) 
-      .lt('deadline', todayISO) // Ambil yang sudah lewat (Masa Lalu)
-      .order('deadline', { ascending: false }); // Yang paling baru lewat di atas
+      // GANTI BARIS INI:
+      // Hapus .lt('deadline', todayISO)
+      // Ganti dengan logika OR (Deadline lewat ATAU Status completed)
+      .or(`deadline.lt.${todayISO},status.eq.completed`) 
+      
+      .order('deadline', { ascending: false });
 
     if (error) {
         console.error(error);

@@ -46,13 +46,14 @@ export default function TaskPage() {
         today.setHours(0, 0, 0, 0);
         const todayISO = today.toISOString();
 
-        const { data, error } = await supabase
+       const { data, error } = await supabase
             .from('assignments')
             .select(`
-                id, title, description, deadline, submission_link, attachments,
+                id, title, description, deadline, submission_link, attachments, status,
                 subjects ( name, lecturers ( name ) )
             `)
-            .gte('deadline', todayISO) // FIX: Only fetch Active tasks (Future or Today)
+            .gte('deadline', todayISO) // Ambil tugas masa depan
+            .neq('status', 'completed') // <--- WAJIB DITAMBAH: Jangan ambil yang sudah selesai
             .order('deadline', { ascending: true });
 
         if (error) {
