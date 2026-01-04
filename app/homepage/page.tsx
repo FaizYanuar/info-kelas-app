@@ -122,7 +122,9 @@ export default function Homepage() {
         ) : schedules.length === 0 ? (
           <div className='flex flex-col items-center justify-center py-1'>
             <div className="w-full mb-10 px-4">
-              <TombolTambah />
+              {isAdmin && (
+                <TombolTambah />
+              )}
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 14 14"><g fill="none" stroke="#ABAEB5" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.7"><path d="M7 13.5a6.5 6.5 0 1 0 0-13a6.5 6.5 0 0 0 0 13" /><path d="M8.367 5.69c.157-.255.5-.418.834-.418s.678.163.835.417m-4.403.001c-.157-.255-.5-.418-.834-.418s-.678.163-.835.417m.216 2.945a1.41 1.41 0 1 0 2.819 0a1.41 1.41 0 0 0 2.82 0" /></g></svg>
             <h2 className='text-xl font-bold text-gray-600'>Horee! 🎉</h2>
