@@ -5,7 +5,9 @@ import TaskDetailModal from '../../components/taskpage/TaskDetailModal';
 import AddTaskModal from '../../components/taskpage/AddTaskModal';
 import { Task } from '../../components/taskpage/types';
 import TugasCard from './tugascard';
+import Link from 'next/link';
 
+// Helper format date
 const formatDeadline = (isoString: string) => {
     const date = new Date(isoString);
     const datePart = date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
@@ -15,12 +17,17 @@ const formatDeadline = (isoString: string) => {
 
 export default function TaskPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [loading, setLoading] = useState(true);
+    // FIX: Removed duplicate isLoading, kept just 'loading'
+    const [loading, setLoading] = useState(true); 
     const [isAdmin, setIsAdmin] = useState(false);
+
+    // State Modal
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     useEffect(() => {
         fetchTasks();
-        checkUser(); // Cek user saat load
+        checkUser(); 
     }, []);
 
     const checkUser = async () => {
@@ -30,19 +37,22 @@ export default function TaskPage() {
         }
     };
 
-    // State Modal
-    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false); // <--- STATE MODAL TAMBAH
-
-    // --- FETCH DATA (Dipisah jadi fungsi agar bisa dipanggil ulang) ---
+    // --- FETCH DATA (Active Tasks Only) ---
     const fetchTasks = async () => {
         setLoading(true);
+
+        // Calculate Today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayISO = today.toISOString();
+
         const { data, error } = await supabase
             .from('assignments')
             .select(`
                 id, title, description, deadline, submission_link, attachments,
                 subjects ( name, lecturers ( name ) )
             `)
+            .gte('deadline', todayISO) // FIX: Only fetch Active tasks (Future or Today)
             .order('deadline', { ascending: true });
 
         if (error) {
@@ -52,25 +62,22 @@ export default function TaskPage() {
                 const { datePart, timePart } = formatDeadline(item.deadline);
                 return {
                     id: item.id,
-                    subject: item.subjects.name,
-                    lecturer: item.subjects.lecturers.name,
+                    subject: item.subjects?.name || 'Unknown', // Added safety check
+                    lecturer: item.subjects?.lecturers?.name || 'Unknown',
                     title: item.title,
                     description: item.description,
                     deadlineDate: datePart,
                     deadlineTime: timePart,
                     submissionLink: item.submission_link,
                     attachments: item.attachments,
-                    status: 'pending'
+                    status: 'pending',
+                    deadline: item.deadline // Keep raw deadline if needed
                 };
             });
             setTasks(formattedData);
         }
         setLoading(false);
     };
-
-    useEffect(() => {
-        fetchTasks();
-    }, []);
 
     // --- KOMPONEN TOMBOL TAMBAH (Reusable Style) ---
     const TombolTambah = () => (
@@ -87,15 +94,24 @@ export default function TaskPage() {
         </div>
     );
 
-
-
     return (
         <div className='bg-[#EDEBE8] min-h-screen pb-24'>
 
             {/* Header */}
-            <div className='bg-[#2051A2] pt-4 pb-4 px-6 rounded-b-3xl shadow-lg mb-6'>
-                <h1 className='text-white text-2xl font-bold'>Daftar Tugas</h1>
-                <p className='text-blue-100 text-sm'>Selesaikan sebelum deadline!</p>
+            <div className='bg-[#2051A2] pt-4 pb-4 px-6 rounded-b-3xl shadow-lg mb-6 flex justify-between items-center'>
+                <div>
+                    <h1 className='text-white text-2xl font-bold'>Daftar Tugas</h1>
+                    <p className='text-blue-100 text-sm'>Selesaikan sebelum deadline!</p>
+                </div>
+
+                <Link href={'/taskpage/archive'}>
+                    <button
+                        className="flex items-center gap-2 bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-50 transition-colors"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm11-5.5l-4 4l-4-4l1.41-1.41L11 13.67V10h2v3.67l1.59-1.58L16 13.5z" /></svg>
+                        Arsip
+                    </button>
+                </Link>
             </div>
 
             {/* List Tugas */}
@@ -104,9 +120,9 @@ export default function TaskPage() {
                     <div className='text-center py-10 text-gray-400 animate-pulse'>Memuat tugas...</div>
                 ) : tasks.length === 0 ? (
                     <div className='flex flex-col items-center justify-center py-10'>
-                        {/* Tombol di atas jika kosong */}
                         <div className="w-full mb-8">
-                            <TombolTambah />
+                            {/* Show Add Button even if empty, if Admin */}
+                            {isAdmin && <TombolTambah />}
                         </div>
                         <p className='text-gray-400'>Tidak ada tugas aktif. Horee! 🎉</p>
                     </div>
@@ -116,7 +132,7 @@ export default function TaskPage() {
                             <TugasCard
                                 key={task.id}
                                 data={task}
-                                onDetailClick={() => setSelectedTask(task)}
+                                onDetailClick={() => setSelectedTask(task)} // Ensure TugasCard handles this prop
                             />
                         ))}
                         {/* Tombol di bawah jika ada data */}
