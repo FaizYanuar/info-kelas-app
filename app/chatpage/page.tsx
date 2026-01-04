@@ -1,17 +1,18 @@
 "use client"
 import React, { useState, useRef, useEffect } from 'react'
 import BottomNavbar from '../components/homepage/navbar'
+import ReactMarkdown from 'react-markdown'
 
 export default function ChatPage() {
   const defaultMessage = { role: 'bot', text: 'Halo! Ada yang bisa aku bantu soal jadwal atau tugas?' };
-  
+
   const [messages, setMessages] = useState<any[]>([defaultMessage]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  
+
   const bottomRef = useRef<HTMLDivElement>(null);
-  
+
   // 1. REF UNTUK TEXTAREA (Agar bisa kita atur tingginya)
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -41,7 +42,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (textareaRef.current) {
       // Reset tinggi dulu ke 'auto' biar bisa menyusut kalau teks dihapus
-      textareaRef.current.style.height = 'auto'; 
+      textareaRef.current.style.height = 'auto';
       // Set tinggi sesuai konten (scrollHeight), tapi batasi max 120px (sekitar 5 baris)
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
@@ -60,7 +61,7 @@ export default function ChatPage() {
     const userMessage = input;
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setInput('');
-    
+
     // Reset tinggi textarea setelah kirim
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
 
@@ -71,9 +72,9 @@ export default function ChatPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // Kirim history juga (sesuai perbaikan "Alzheimer" sebelumnya)
-        body: JSON.stringify({ message: userMessage, history: messages }) 
+        body: JSON.stringify({ message: userMessage, history: messages })
       });
-      
+
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'bot', text: data.reply || "Maaf, error." }]);
     } catch (err) {
@@ -85,15 +86,15 @@ export default function ChatPage() {
 
   return (
     <div className='bg-[#EDEBE8] h-screen flex flex-col'>
-      
+
       {/* Header (Tetap Sama) */}
       <div className='bg-[#2051A2] px-6 pt-4 pb-4 shadow-md shrink-0 flex justify-between items-center rounded-b-3xl'>
         <div>
-            <h1 className='text-white text-2xl font-bold'>Asisten Kelas</h1>
-            <p className='text-blue-100 text-sm'>Tanyakan tentang jadwal, tugas, & lainnya!</p>
+          <h1 className='text-white text-2xl font-bold'>Asisten Kelas</h1>
+          <p className='text-blue-100 text-sm'>Tanyakan tentang jadwal, tugas, & lainnya!</p>
         </div>
         <button onClick={handleClearChat} className='p-2 bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors'>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
         </button>
       </div>
 
@@ -102,9 +103,23 @@ export default function ChatPage() {
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-[#D06E49] text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-200'}`}>
-              {typeof msg.text === 'string' && msg.text.split('\n').map((line: string, i: number) => (
-                <p key={i} className="min-h-4">{line}</p>
-              ))}
+              <ReactMarkdown
+                components={{
+                  // Mengatur bullet points
+                  ul: ({ node, ...props }) => <ul className="list-disc pl-4 my-2" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="list-decimal pl-4 my-2" {...props} />,
+                  li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                  // Mengatur huruf tebal
+                  strong: ({ node, ...props }) => <span className="font-bold" {...props} />,
+                  // Mengatur link
+                  a: ({ node, ...props }) => <a className="text-blue-500 underline" target="_blank" {...props} />,
+                  // Mengatur paragraf
+                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />
+                }}
+              >
+                {/* Pastikan text adalah string */}
+                {typeof msg.text === 'string' ? msg.text : ''}
+              </ReactMarkdown>
             </div>
           </div>
         ))}
@@ -124,7 +139,7 @@ export default function ChatPage() {
       <div className='fixed bottom-24 left-0 w-full px-4'>
         {/* Ubah rounded-full jadi rounded-3xl agar lebih bagus saat textarea membesar */}
         <div className='bg-white p-2 rounded-3xl shadow-lg border border-gray-200 flex items-end gap-2'>
-          
+
           {/* GANTI INPUT DENGAN TEXTAREA */}
           <textarea
             ref={textareaRef}
@@ -137,13 +152,13 @@ export default function ChatPage() {
             style={{ minHeight: '44px' }} // Tinggi minimum agar rapi
           />
 
-          <button 
+          <button
             onClick={handleSend}
             disabled={isLoading}
             // Ubah 'rounded-full' jadi 'rounded-2xl' agar serasi dengan kotak input
             className='bg-[#2051A2] mb-1 p-3 rounded-2xl text-white hover:bg-blue-800 transition-colors disabled:opacity-50 shrink-0 h-11 w-11 flex items-center justify-center'
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M2.01 21L23 12L2.01 3L2 10l15 2l-15 2z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M2.01 21L23 12L2.01 3L2 10l15 2l-15 2z" /></svg>
           </button>
         </div>
       </div>

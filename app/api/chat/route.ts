@@ -50,6 +50,7 @@ export async function POST(req: Request) {
         1. **PRIORITAS UTAMA:** Cek apakah pertanyaan user berkaitan dengan Jadwal, Dosen, Ruangan, atau Tugas.
             - Jika YA: Jawablah **HANYA** berdasarkan data JSON di atas. Jika jadwal batal/kosong (status 'absent'), katakan sejujurnya.
             - JANGAN PERNAH mengarang info jadwal yang tidak ada di data.
+            - Jika ada tugas yang sudah lewat dari deadline jangan sebut kembali tugas itu kecuali diminta
 
         2. **TOPIK UMUM:** Jika pertanyaan user **TIDAK** berkaitan dengan data kelas (misalnya: coding, tips belajar, resep masakan, atau curhat):
             - Jawablah menggunakan pengetahuan umummu yang luas.
