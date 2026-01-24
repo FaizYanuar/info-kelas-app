@@ -1,6 +1,6 @@
 # Info Kelas App
 
-![Deployment Status](https://img.shields.io/vercel/deploy/info-kelas/main?style=flat-square&logo=vercel)
+[![Visit Website](https://img.shields.io/badge/Website-Visit%20App-black?style=flat-square&logo=vercel)](https://info-kelas.vercel.app)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 ## 📄 Description
