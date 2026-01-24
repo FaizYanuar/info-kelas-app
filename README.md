@@ -9,16 +9,26 @@
 
 ## ✨ Features
 
-* **PWA Support:** Fully installable on mobile devices with offline functionality.
-* **Real-time Data:** Fetches live class schedules via Supabase.
-* **Responsive UI:** Optimized for seamless use on desktop, tablet, and mobile.
-* **Modern Stack:** Built with Next.js (App Router) for high performance.
+### 🤖 AI Study Assistant
+* **Smart Chatbot:** Built-in chat interface (`/chatpage`) to answer student queries.
+* **Academic Support:** (Likely) Provides instant answers about schedules, deadlines, or general study topics.
+
+### 📅 Advanced Scheduling
+* **Weekly Schedule:** Interactive view of all weekly classes.
+* **Replacement Classes:** Handles "Kelas Pengganti" (Make-up classes) with the `additional_schedules` system.
+* **Session Logs:** Tracks history of past classes, including attendance and notes.
+
+### 📝 Academic Tracker
+* **Assignment Management:** Track homework, quizzes, and projects with deadlines and submission links.
+* **Lecturer Directory:** Database of lecturers with profiles and contact details.
+* **Semester Management:** Organize data by active semesters.
 
 ## 🛠️ Tech Stack
 
 * **Framework:** [Next.js](https://nextjs.org/) (App Router)
 * **Language:** TypeScript
-* **Database:** [Supabase](https://supabase.com/)
+* **Database:** [Supabase](https://supabase.com/) (PostgreSQL)
+* **AI Model:** [Google Gemini API](https://ai.google.dev/)
 * **Styling:** Tailwind CSS
 * **PWA:** next-pwa
 * **Deployment:** Vercel
@@ -38,6 +48,7 @@
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+GOOGLE_API_KEY=your_gemini_api_key_here
 ```
 ### 🗄️ Database Setup
 
@@ -60,6 +71,13 @@ CREATE TABLE subjects (lecturer_id bigint, name text NOT NULL, id bigint NOT NUL
 
 CREATE TABLE weekly_schedules (sort_index integer NOT NULL, day_of_week integer NOT NULL, subject_id bigint, id bigint NOT NULL, room text NOT NULL, time_text text NOT NULL, semester_id bigint);
 ```
+
+### 🤖 Google Gemini API
+
+To enable the chatbot feature:
+1.  Go to [Google AI Studio](https://aistudio.google.com/) and create a free API key.
+2.  Paste the key into the `GOOGLE_API_KEY` variable in your `.env.local` file.
+3.  The chatbot at `/chatpage` will now function automatically.
 
 ### Installation
 
